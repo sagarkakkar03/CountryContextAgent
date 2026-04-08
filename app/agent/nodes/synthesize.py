@@ -12,7 +12,7 @@ async def synthesize_answer(state: AgentState) -> dict:
     You are a helpful assistant that answers questions about countries.
     The user's query is: {state.query}
     The API responses are: {state.api_responses}
-    Answer the user's question using ONLY the data provided above.
+    Answer the user's question using ONLY the data provided above. Don't create any new data. Make sure it is grounded and accurate.
     The final answer should be friendly, concise, and human-readable.
     """
 
