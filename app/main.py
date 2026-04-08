@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import StreamingResponse
 from app.agent.graph import graph
 from app.core.logger import logger
 from app.core.exceptions import global_exception_handler
 import time
+import json
 
 app = FastAPI(title="Country Information Agent API")
 
@@ -53,7 +55,7 @@ async def log_requests_middleware(request: Request, call_next):
     
     return response
 
-@app.post("/query")
+@app.post("/")
 async def query(query: str):
     """
     Invoke the agentic workflow to answer user's query.
@@ -84,3 +86,28 @@ async def query(query: str):
     )
     
     return result["final_answer"]
+
+@app.get("/stream")
+async def stream_query(query: str):
+    """
+    Stream the agent workflow steps as Server-Sent Events (SSE).
+    This allows the UI to show real-time progress of each agent node.
+    """
+    if not query or not query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+
+    async def event_generator():
+        try:
+            async for event in graph.astream({"query": query}):
+                for node_name, node_state in event.items():
+                    # We send each node's output as a JSON string
+                    data = {
+                        "node": node_name,
+                        "state": node_state
+                    }
+                    yield f"data: {json.dumps(data)}\n\n"
+        except Exception as e:
+            error_data = {"error": str(e)}
+            yield f"data: {json.dumps(error_data)}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
