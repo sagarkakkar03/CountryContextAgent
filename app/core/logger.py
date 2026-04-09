@@ -9,7 +9,6 @@ class JSONFormatter(logging.Formatter):
     This is the industry standard for production logs (easy to parse in Datadog/Splunk/ELK).
     """
     def format(self, record):
-        # Base log data
         log_record = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
@@ -17,12 +16,10 @@ class JSONFormatter(logging.Formatter):
             "message": record.getMessage(),
         }
         
-        # Include any exception tracebacks if present
         if record.exc_info:
             log_record["exception"] = self.formatException(record.exc_info)
             
-        # Add any extra data passed via the `extra={...}` dictionary in the logger call
-        # We filter out standard logging attributes to only keep our custom ones
+       
         standard_attrs = {
             "args", "asctime", "created", "exc_info", "exc_text", "filename", 
             "funcName", "levelname", "levelno", "lineno", "module", "msecs", 
@@ -43,18 +40,15 @@ def setup_logger():
     logger = logging.getLogger("country_agent")
     logger.setLevel(logging.INFO)
     
-    # 1. Console Handler (Readable text for local development)
     console_handler = logging.StreamHandler(sys.stdout)
     console_formatter = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(message)s"
     )
     console_handler.setFormatter(console_formatter)
     
-    # 2. File Handler (Structured JSON for production)
     file_handler = logging.FileHandler("app.log")
     file_handler.setFormatter(JSONFormatter())
     
-    # Add both handlers to our logger
     if not logger.handlers:
         logger.addHandler(console_handler)
         logger.addHandler(file_handler)

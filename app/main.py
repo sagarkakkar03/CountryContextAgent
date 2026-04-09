@@ -60,7 +60,6 @@ async def query(query: str):
     """
     Invoke the agentic workflow to answer user's query.
     """
-    # 1. Input Validation
     if not query or not query.strip():
         logger.warning(
             "User attempted to send an empty query.",
@@ -68,7 +67,6 @@ async def query(query: str):
         )
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
         
-    # 2. Process Query
     logger.info(
         f"Processing query: '{query}'",
         extra={"event": "agent_started", "user_query": query}
